@@ -30,11 +30,13 @@ class AdminCommands:
     @commands.command()
     async def off(self, ctx):
         self.bot.unload_extension('cogs.commands')
+        self.bot.unload_extension('cogs.votecommand')
         await ctx.send('turned off')
 
     @commands.command()
     async def on(self, ctx):
         self.bot.load_extension('cogs.commands')
+        self.bot.load_extension('cogs.votecommand')
         await ctx.send('turned on')
 
     @checks.avatarcd()
@@ -46,13 +48,13 @@ class AdminCommands:
             raise NotEnoughMessages(target.name, usermsgcount, cutoff)
         else:
             await ctx.send(f"replicating {target.name} ({usermsgcount} messages)")
-        await ctx.invoke(self.bot.get_command('model'), target.id)
         await ctx.invoke(self.bot.get_command('setavatar'), target)
         member = ctx.guild.get_member_named(target.name + "#" + target.discriminator)
         if member and member.nick:
             await ctx.invoke(self.bot.get_command('setnickname'), member.nick)
         else:
             await ctx.invoke(self.bot.get_command('setnickname'), target.name)
+        await ctx.invoke(self.bot.get_command('model'), target.id)
 
     @commands.command(name="model", aliases=['create_model'])
     async def create_model(self, ctx, userid: customconverters.UserID):

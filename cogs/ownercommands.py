@@ -5,6 +5,7 @@ class OwnerCommands:
 
     def __init__(self, bot):
         self.bot = bot
+        self.password = self.bot._cfg.get('discord', 'password', fallback="")
 
     async def __local_check(self, ctx):
         if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():

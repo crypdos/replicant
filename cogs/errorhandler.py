@@ -13,6 +13,10 @@ class ErrorHandler:
         if isinstance(error, commands.CommandNotFound):
             return
         if isinstance(error, commands.BadArgument):  # can't find member
+            # if a user can't be found then the check associated with the command shoulnd't add a cooldown
+            invokedwith = ctx.invoked_with
+            for check in ctx.bot.get_command(invokedwith).checks:
+                await check(ctx, "undo")
             return await ctx.send(error)
         if isinstance(error, commands.CommandOnCooldown):
             seconds = error.retry_after
