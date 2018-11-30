@@ -1,5 +1,6 @@
 import re
 import aiohttp
+import asyncio
 
 async def clean_content(ctx, message):
     p = re.compile("\<\D{1,2}(\d*)\>")
@@ -47,5 +48,3 @@ async def accept_invite(ctx, invitestring):
     async with aiohttp.ClientSession() as session:
         with aiohttp.Timeout(10):
             return await session.post(url, headers=headers)
-
-

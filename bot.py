@@ -8,6 +8,7 @@ from utils.scraper import Scraper
 from os import listdir
 from os.path import isfile, join
 import utils.checks as checks
+import asyncio
 
 if not isfile("config.ini"):
     print("No config.ini file found! Exiting")
@@ -76,7 +77,7 @@ async def reload(ctx):
             traceback.print_exc()
     await load_cogs()
     print("Reloaded all cogs")
-    await ctx.send('\N{OK HAND SIGN}')
+    await ctx.send('reloaded \N{OK HAND SIGN}')
 
 
 if cfg.get('discord', 'userbot', fallback="no").lower() == "yes":
