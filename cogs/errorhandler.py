@@ -46,7 +46,7 @@ class ErrorHandler:
             if isinstance(error.original, customerrors.AlreadyScraping):
                 return await ctx.send("already scraping")
             if isinstance(error.original, customerrors.NotEnoughMessages):
-                return await ctx.send(f"{username} does not have enough messages ({error.original.msgcount} < {error.original.cutoff})")
+                return await ctx.send(f"{error.original.username} does not have enough messages ({error.original.msgcount} < {error.original.cutoff})")
 
 
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)

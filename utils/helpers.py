@@ -1,5 +1,5 @@
 import re
-
+import aiohttp
 
 async def clean_content(ctx, message):
     p = re.compile("\<\D{1,2}(\d*)\>")
@@ -37,3 +37,15 @@ async def userid_in_db(ctx, userid):
         if doc:
             return doc['author_id']
     return None
+
+async def accept_invite(ctx, invitestring):
+    invite = re.search(r'discord.gg\/(\S*)', invitestring).group(1)
+    botToken = ctx.bot._cfg['discord']['token']
+    url = f"https://discordapp.com/api/v6/invite/{invite}"
+    headers = {"Authorization": f"{botToken}",
+               "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36"}
+    async with aiohttp.ClientSession() as session:
+        with aiohttp.Timeout(10):
+            return await session.post(url, headers=headers)
+
+

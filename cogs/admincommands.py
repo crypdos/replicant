@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
-from urllib.request import Request, urlopen
 from datetime import datetime
 from utils.customerrors import NotEnoughMessages, AlreadyScraping
 import utils.customconverters as customconverters
 from utils.helpers import username_from_db, count_documents
 import utils.checks as checks
+import aiohttp
 
 class AdminCommands:
 
@@ -46,23 +46,24 @@ class AdminCommands:
         usermsgcount = await count_documents(ctx, target.id)
         if usermsgcount < cutoff:
             raise NotEnoughMessages(target.name, usermsgcount, cutoff)
-        else:
-            await ctx.send(f"replicating {target.name} ({usermsgcount} messages)")
         await ctx.invoke(self.bot.get_command('setavatar'), target)
         member = ctx.guild.get_member_named(target.name + "#" + target.discriminator)
         if member and member.nick:
             await ctx.invoke(self.bot.get_command('setnickname'), member.nick)
         else:
             await ctx.invoke(self.bot.get_command('setnickname'), target.name)
-        await ctx.invoke(self.bot.get_command('model'), target.id)
+        await ctx.invoke(self.bot.get_command('model'), target)
 
     @commands.command(name="model", aliases=['create_model'])
-    async def create_model(self, ctx, userid: customconverters.UserID):
-        username = await username_from_db(ctx, userid)
-        if not username:
-            username = "unknown"
-        await self.bot._model.createModel(userid, username)
-        await ctx.send(f"hi it's me {username} 😃 ")
+    async def create_model(self, ctx, target: customconverters.GlobalUser):
+        cutoff = self.bot._cfg.getint("settings", "msgcutoff", fallback=1000)
+        usermsgcount = await count_documents(ctx, target.id)
+        if usermsgcount < cutoff:
+            raise NotEnoughMessages(target.name, usermsgcount, cutoff)
+        else:
+            await ctx.send(f"replicating {target.name} ({usermsgcount} messages)")
+        await self.bot._model.createModel(target.id, target.name)
+        await ctx.send(f"hi it's me {target.name} 😃 ")
 
     @commands.command(name="scrape")
     async def scrape(self, ctx):
@@ -88,8 +89,11 @@ class AdminCommands:
     @commands.command(name='setavatar', aliases=['copyavatar'])
     async def copy_avatar(self, ctx, target : customconverters.GlobalUser):
         url = target.avatar_url_as(format='png')
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        avatarimage = urlopen(req).read()
+        async with aiohttp.ClientSession() as session:
+            with aiohttp.Timeout(10):
+                async with session.get(url) as response:
+                    assert response.status == 200
+                    avatarimage = await response.read()
         try:
             await self.bot.user.edit(password=self.password, avatar=avatarimage)
         except discord.HTTPException:
