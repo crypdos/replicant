@@ -49,6 +49,7 @@ class OwnerCommands:
 
     @commands.command(name="gitupdate")
     async def gitupdate(self, ctx):
+        await self.bot.loop.run_in_executor(None, subprocess.check_output, ['git', 'reset', '--hard'])
         output = await self.bot.loop.run_in_executor(None, subprocess.check_output, ['git', 'pull'])
         decoded = output.decode("utf-8")
         await ctx.send(decoded)
