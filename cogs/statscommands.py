@@ -31,7 +31,10 @@ class StatsCommands:
 
     @commands.cooldown(1, 15, commands.BucketType.user)
     @commands.command()
-    async def msgperday(self, ctx, target : customconverters.GlobalUser):
+    async def msgperday(self, ctx, target : customconverters.GlobalUser = None):
+        if target is None:
+            target=ctx.author
+        await ctx.bot.send_typing(ctx.channel)
         ## slasher is hardcoded for now, change later
         cursor = ctx.bot._db['slasher'].find({"author_id": target.id}, {"_id": 0, 'timestamp': 1})
         df = pd.DataFrame([i async for i in cursor])
