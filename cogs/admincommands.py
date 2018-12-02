@@ -90,10 +90,9 @@ class AdminCommands:
     async def copy_avatar(self, ctx, target : customconverters.GlobalUser):
         url = target.avatar_url_as(format='png')
         async with aiohttp.ClientSession() as session:
-            with aiohttp.Timeout(10):
-                async with session.get(url) as response:
-                    assert response.status == 200
-                    avatarimage = await response.read()
+            async with session.get(url) as response:
+                assert response.status == 200
+                avatarimage = await response.read()
         try:
             await self.bot.user.edit(password=self.password, avatar=avatarimage)
         except discord.HTTPException:

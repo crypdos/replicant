@@ -46,5 +46,4 @@ async def accept_invite(ctx, invitestring):
     headers = {"Authorization": f"{botToken}",
                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36"}
     async with aiohttp.ClientSession() as session:
-        with aiohttp.Timeout(10):
-            return await session.post(url, headers=headers)
+        return await session.post(url, headers=headers)
