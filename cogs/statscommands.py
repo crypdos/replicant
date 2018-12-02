@@ -31,7 +31,7 @@ class StatsCommands:
 
     @commands.cooldown(1, 15, commands.BucketType.user)
     @commands.command()
-    async def msgperday(self, ctx, target : customconverters.GlobalUser = None):
+    async def msgperday(self, ctx, target : customconverters.GlobalUser):
         if target is None:
             target=ctx.author
         await ctx.bot.send_typing(ctx.channel)
