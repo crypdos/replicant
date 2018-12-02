@@ -31,26 +31,26 @@ class StatsCommands:
 
     @commands.cooldown(1, 15, commands.BucketType.user)
     @commands.command()
-    async def msgperday(self, ctx, target : customconverters.GlobalUser):
+    async def msgperday(self, ctx, target : customconverters.GlobalUser = None):
         if target is None:
             target=ctx.author
-        await ctx.bot.send_typing(ctx.channel)
-        ## slasher is hardcoded for now, change later
-        cursor = ctx.bot._db['slasher'].find({"author_id": target.id}, {"_id": 0, 'timestamp': 1})
-        df = pd.DataFrame([i async for i in cursor])
-        binsize = 3
-        counts = df['timestamp'].value_counts(sort=False)
-        resampled = (counts.resample(str(binsize) + "D").sum() / binsize)
+        async with ctx.channel.typing():
+            ## slasher is hardcoded for now, change later
+            cursor = ctx.bot._db['slasher'].find({"author_id": target.id}, {"_id": 0, 'timestamp': 1})
+            df = pd.DataFrame([i async for i in cursor])
+            binsize = 3
+            counts = df['timestamp'].value_counts(sort=False)
+            resampled = (counts.resample(str(binsize) + "D").sum() / binsize)
 
-        fig, ax = plt.subplots(figsize=(10, 5))
-        fig, ax = await self.setstyle(fig, ax)
-        ax.set_ylabel("messages/day")
-        fig.suptitle(target.name + "#" + target.discriminator + "\nmessages/day over time", color="white")
-        ax.plot(resampled, color="white")
-        buf = io.BytesIO()
-        plt.savefig(buf, bbox_inches="tight", format="png")
-        buf.seek(0)
-        await ctx.send(file=discord.File(buf, filename=target.name + "_graph.png"))
+            fig, ax = plt.subplots(figsize=(10, 5))
+            fig, ax = await self.setstyle(fig, ax)
+            ax.set_ylabel("messages/day")
+            fig.suptitle(target.name + "#" + target.discriminator + "\nmessages/day over time", color="white")
+            ax.plot(resampled, color="white")
+            buf = io.BytesIO()
+            plt.savefig(buf, bbox_inches="tight", format="png")
+            buf.seek(0)
+            await ctx.send(file=discord.File(buf, filename=target.name + "_graph.png"))
 
 
 def setup(bot):
