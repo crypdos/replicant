@@ -29,6 +29,7 @@ class StatsCommands:
         ax.tick_params(colors='white')
         return fig, ax
 
+    @commands.cooldown(1, 15, commands.BucketType.user)
     @commands.command()
     async def msgperday(self, ctx, target : customconverters.GlobalUser):
         ## slasher is hardcoded for now, change later

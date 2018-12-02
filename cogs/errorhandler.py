@@ -23,7 +23,10 @@ class ErrorHandler:
             seconds = round(seconds, 2)
             hours, remainder = divmod(int(seconds), 3600)
             minutes, seconds = divmod(remainder, 60)
-            await ctx.send(f"wait {minutes}")
+            if minutes == 0:
+                await ctx.send(f"wait {seconds} seconds")
+            else:
+                await ctx.send(f"wait {minutes} minutes")
 
         if isinstance(error, commands.CheckFailure):
             return # error is handled locally in check functions
