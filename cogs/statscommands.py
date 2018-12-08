@@ -36,12 +36,11 @@ class StatsCommands:
             target=ctx.author
         async with ctx.channel.typing():
             ## slasher is hardcoded for now, change later
+            rollingwindow = 5 # rolling mean of width 5
             cursor = ctx.bot._db['slasher'].find({"author_id": target.id}, {"_id": 0, 'timestamp': 1})
-            df = pd.DataFrame([i async for i in cursor])
-            binsize = 3
-            counts = df['timestamp'].value_counts(sort=False)
-            resampled = (counts.resample(str(binsize) + "D").sum() / binsize)
-
+            series = pd.Series(index = [i['timestamp'] async for i in cursor], data=1)
+            perday = series.resample("1D").sum()
+            resampled = perday.rolling(rollingwindow).mean()
             fig, ax = plt.subplots(figsize=(10, 5))
             fig, ax = await self.setstyle(fig, ax)
             ax.set_ylabel("messages/day")
@@ -50,6 +49,7 @@ class StatsCommands:
             buf = io.BytesIO()
             plt.savefig(buf, bbox_inches="tight", format="png")
             buf.seek(0)
+            plt.close()
             await ctx.send(file=discord.File(buf, filename=target.name + "_graph.png"))
 
 
