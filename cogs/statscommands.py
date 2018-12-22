@@ -30,7 +30,7 @@ class StatsCommands:
         return fig, ax
 
     @commands.cooldown(1, 15, commands.BucketType.user)
-    @commands.command()
+    @commands.command(aliases=["msgsperday"])
     async def msgperday(self, ctx, target : customconverters.GlobalUser = None):
         if target is None:
             target=ctx.author
@@ -51,6 +51,23 @@ class StatsCommands:
             buf.seek(0)
             plt.close()
             await ctx.send(file=discord.File(buf, filename=target.name + "_graph.png"))
+
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    @commands.command(name ="find", aliases=["finduserid", "finduser"])
+    async def finduserid(self, ctx, tofind : str):
+        server = "slasher" # hardcoded to slasher for now, change later
+        query = self.bot._db[server].aggregate([{"$match": {'author_name': {'$regex': tofind, '$options': 'i'}}},
+                              {"$group": {"_id": "$author_name", "userid": {"$addToSet": "$author_id"},
+                                          "count": {"$sum": 1}}},
+                              {"$sort": {"count": -1}}])
+        output = f"Results for \"{tofind}\":\n"
+        i, maxiter = 0, 5
+        async for x in query:
+            output += f"\"{x['_id']}\", userid: {x['userid']}, msgcount: {x['count']}\n"
+            i += 1
+            if i >= maxiter:
+                break
+        await ctx.send(output)
 
 
 def setup(bot):
