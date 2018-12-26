@@ -32,10 +32,14 @@ class TextModel:
         if self.model:
             if beginning:
                 try:
-                    return self.model.make_sentence_with_start(beginning, tries=700)
+                    sentence = self.model.make_sentence_with_start(beginning, tries=1000)
+                    if sentence:
+                        return sentence
+                    else:
+                        return self.model.make_sentence(tries=1000)
                 except KeyError: # beginword not found
-                    return self.model.make_sentence(tries=700)
+                    return self.model.make_sentence(tries=1000)
             else:
-                return self.model.make_sentence(tries=700)
+                return self.model.make_sentence(tries=1000)
         else:
             raise ModelDoesntExist
