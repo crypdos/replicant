@@ -23,11 +23,11 @@ class MordhauForumScraper:
 
     async def comment_to_db(self, ctx, comment):
         "Parse the html for each comment and add relevant information to the db"
-        comment_id = comment.get('data-pk')
+        comment_id = int(comment.get('data-pk'))
         if await self.bot._db['mordhauforum'].find_one({"comment_id": comment_id}):
             return # this comment is already added to the db
         try:
-            user_id = comment.find(class_='username').get('href').split('/')[3]
+            user_id = int(comment.find(class_='username').get('href').split('/')[3])
             content = comment.find(class_='comment-text').get_text().strip()
             user_name = comment.find(class_='username').get_text().strip()
             timestamp = comment.find(class_='comment-date').find(class_='text-muted').get('data-date')[:-6]
@@ -55,7 +55,7 @@ class MordhauForumScraper:
         await self.remove_polls(ctx, soup)
         comments = soup.find_all(class_='comment')
         for comment in comments:
-            if comment.get('data-pk') >= comment_id:
+            if int(comment.get('data-pk')) >= comment_id:
                 await self.comment_to_db(ctx, comment)
         return response.status
 
