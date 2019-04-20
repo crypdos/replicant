@@ -21,9 +21,8 @@ class MordhauForumScraper:
             child.decompose()
 
 
-    async def comment_to_db(self, ctx, comment):
+    async def comment_to_db(self, ctx, comment, comment_id):
         "Parse the html for each comment and add relevant information to the db"
-        comment_id = int(comment.get('data-pk'))
         if await self.bot._db['mordhauforum'].find_one({"comment_id": comment_id}):
             return # this comment is already added to the db
         try:
@@ -55,8 +54,9 @@ class MordhauForumScraper:
         await self.remove_polls(ctx, soup)
         comments = soup.find_all(class_='comment')
         for comment in comments:
-            if int(comment.get('data-pk')) >= comment_id:
-                await self.comment_to_db(ctx, comment)
+            commment_id = int(comment.get('data-pk'))
+            if comment_id >= comment_id:
+                await self.comment_to_db(ctx, comment, comment_id)
         return response.status
 
 
