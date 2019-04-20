@@ -54,7 +54,7 @@ class MordhauForumScraper:
         await self.remove_polls(ctx, soup)
         comments = soup.find_all(class_='comment')
         for comment in comments:
-            commment_id = int(comment.get('data-pk'))
+            comment_id = int(comment.get('data-pk'))
             if comment_id >= comment_id:
                 await self.comment_to_db(ctx, comment, comment_id)
         return response.status
