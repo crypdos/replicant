@@ -55,12 +55,13 @@ class MordhauForumScraper:
         await self.remove_polls(ctx, soup)
         comments = soup.find_all(class_='comment')
         for comment in comments:
-            await self.comment_to_db(ctx, comment)
+            if comment.get('data-pk') >= comment_id:
+                await self.comment_to_db(ctx, comment)
         return response.status
 
 
     @commands.command(name="mordhauscrape")
-    async def scrape(self, ctx, i :int, increment: int):
+    async def scrape(self, ctx, i : int = 0):
         print(f"Starting mordhauforum scrape, i={i}, increment={increment}")
         error_buffer = 0
         #i = 37100
@@ -73,7 +74,7 @@ class MordhauForumScraper:
                 error_buffer -= 1
             if i% 50 == 0:
                 print(f" i = {i}")
-            i += increment
+            i += 1
         print(f"Done looping, error buffer = {error_buffer}")
 
 
