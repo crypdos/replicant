@@ -39,7 +39,6 @@ class MordhauForumScraper:
             return
 
 
-
     async def process_page(self, ctx, comment_id):
         """Each comment links to the threadpage it is posted in, process all comments in this threadpage
         Returns response status"""
@@ -61,21 +60,17 @@ class MordhauForumScraper:
 
 
     @commands.command(name="mordhauscrape")
-    async def scrape(self, ctx, i : int = 0):
+    async def scrape(self, ctx, start : int = 0):
         print(f"Starting mordhauforum scrape, i={i}")
-        error_buffer = 0
-        #i = 37100
+        end = 197677
+        #187677
         #max = 187272
-        while error_buffer < 100:
+        for i in range(start, end):
             response = await self.process_page(ctx, i)
-            if response != 200:
-                error_buffer += 1
-            elif error_buffer > 0:
-                error_buffer -= 1
             if i% 50 == 0:
                 print(f" i = {i}")
             i += 1
-        print(f"Done looping, error buffer = {error_buffer}")
+        print("Done looping")
 
 
 
