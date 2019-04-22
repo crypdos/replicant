@@ -69,7 +69,6 @@ class MordhauForumScraper:
             response = await self.process_page(ctx, i)
             if i% 50 == 0:
                 print(f" i = {i}")
-            i += 1
         print("Done looping")
 
 
