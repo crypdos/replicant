@@ -61,7 +61,7 @@ class MordhauForumScraper:
 
     @commands.command(name="mordhauscrape")
     async def scrape(self, ctx, start : int = 0):
-        print(f"Starting mordhauforum scrape, i={i}")
+        print(f"Starting mordhauforum scrape, start={start}")
         end = 197677
         #187677
         #max = 187272
