@@ -3,7 +3,7 @@ import utils.customconverters as customconverters
 from utils.helpers import clean_content
 from discord import Forbidden
 
-class UserCommands:
+class UserCommands(commands.Cog, name='User Commands'):
 
     def __init__(self, bot):
         self.bot = bot

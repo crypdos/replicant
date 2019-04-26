@@ -3,7 +3,7 @@ import utils.customconverters as customconverters
 import utils.helpers as helpers
 import subprocess
 
-class OwnerCommands:
+class OwnerCommands(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot

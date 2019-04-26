@@ -5,10 +5,10 @@ import utils.customerrors as customerrors
 import discord
 from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
 
-class ErrorHandler:
+class ErrorHandler(commands.Cog, name="Error Handler"):
     def __init__(self, bot):
         self.bot = bot
-
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             return
@@ -27,6 +27,10 @@ class ErrorHandler:
                 await ctx.send(f"wait {seconds} seconds")
             else:
                 await ctx.send(f"wait {minutes} minutes")
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('missing required argument for command')
+            return
 
         if isinstance(error, commands.CheckFailure):
             return # error is handled locally in check functions

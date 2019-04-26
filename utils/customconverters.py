@@ -11,7 +11,7 @@ class UserID(commands.IDConverter):
 
         if match is not None:
             user_id = int(match.group(1))
-            result = await ctx.bot.get_user_info(user_id)
+            result = await ctx.bot.fetch_user(user_id)
             # this is changed from the default class, allows getting users outside the global message cache
         else:
             arg = argument
@@ -51,7 +51,7 @@ class GlobalUser(commands.IDConverter):
 
         if match is not None:
             user_id = int(match.group(1))
-            result = await ctx.bot.get_user_info(user_id)
+            result = await ctx.bot.fetch_user(user_id)
         else:
             arg = argument
             # check for discriminator if it exists

@@ -7,7 +7,7 @@ from utils.helpers import username_from_db
 import utils.customconverters as customconverters
 import utils.checks as checks
 
-class VoteCommand:
+class VoteCommand(commands.Cog):
 
     def __init__(self, bot):
         self.bot=bot
@@ -53,7 +53,7 @@ class VoteCommand:
             winner = candidates[windexlist[0]]
             await ctx.send(f"winner: {candidatenames[windexlist[0]]}")
         if winner:
-            winneruser = await self.bot.get_user_info(winner)
+            winneruser = await self.bot.fetch_user(winner)
             await ctx.invoke(self.bot.get_command('replicate'), winneruser)
         else:
             # winner is 0 which is "keep current model", add 1 token to avatarcd bucket

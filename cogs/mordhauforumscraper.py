@@ -2,9 +2,10 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 from datetime import datetime
 import aiohttp
+from pymongo import DESCENDING, ASCENDING
 import threading
 
-class MordhauForumScraper:
+class MordhauForumScraper(commands.Cog):
 
     def __init__(self, bot):
         self.bot=bot
@@ -60,7 +61,10 @@ class MordhauForumScraper:
 
 
     @commands.command(name="mordhauscrape")
-    async def scrape(self, ctx, start : int = 0):
+    async def scrape(self, ctx):
+        "Look for comment_id with highest value in the db, start scraping from that point on"
+        async for x in self.bot._db['mordhauforum'].find().sort("comment_id", DESCENDING).limit(1):
+            start = int(x['comment_id'])
         print(f"Starting mordhauforum scrape, start={start}")
         end = 197677
         #187677

@@ -6,7 +6,7 @@ async def clean_content(ctx, message):
     p = re.compile("\<\D{1,2}(\d*)\>")
     for x in p.finditer(message): #replace mentions
         try:
-            user = await ctx.bot.get_user_info(int(x.group(1)))
+            user = await ctx.bot.fetch_user(int(x.group(1)))
             username = user.name
         except (TypeError, AttributeError):
             username = "unknown_user"
@@ -23,7 +23,7 @@ async def count_documents(ctx, userid):
     return total
 
 async def username_from_db(ctx, userid):
-    user = await ctx.bot.get_user_info(userid)
+    user = await ctx.bot.fetch_user(userid)
     if user:
         return user.name
     for (coll, serverid) in ctx.bot._cfg.items('scrapeservers'):

@@ -5,7 +5,7 @@ import utils.customconverters as customconverters
 import io
 import discord
 
-class StatsCommands:
+class StatsCommands(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot

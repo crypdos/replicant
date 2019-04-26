@@ -7,7 +7,7 @@ from utils.helpers import username_from_db, count_documents
 import utils.checks as checks
 import aiohttp
 
-class AdminCommands:
+class AdminCommands(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -88,7 +88,7 @@ class AdminCommands:
     @checks.avatarcd()
     @commands.command(name='setavatar', aliases=['copyavatar'])
     async def copy_avatar(self, ctx, target : customconverters.GlobalUser):
-        url = target.avatar_url_as(format='png')
+        url = str(target.avatar_url_as(format='png'))
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 assert response.status == 200
