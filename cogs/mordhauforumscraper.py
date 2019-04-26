@@ -43,6 +43,8 @@ class MordhauForumScraper(commands.Cog):
         """Each comment links to the threadpage it is posted in, process all comments in this threadpage
         Returns response status"""
         soup = await self.soup_from_page(comment_id)
+        if soup is None:
+            return
         comments = soup.find_all(class_='comment')
         for comment in comments:
             comment_id = int(comment.get('data-pk'))
@@ -52,6 +54,8 @@ class MordhauForumScraper(commands.Cog):
     async def process_single_comment(self, comment_id):
         "In a forumpage, find the comment matching the comment_id and add it to the db"
         soup = await self.soup_from_page(comment_id)
+        if soup is None:
+            return
         comment = soup.find(class_="comment", attrs={"data-pk": str(comment_id)})
         await self.comment_to_db(comment, comment_id)
 
@@ -61,7 +65,7 @@ class MordhauForumScraper(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(base_url + str(comment_id) + '/find') as response:
                 if response.status != 200:
-                    return response.status
+                    return None
                 comment_html = await response.text()
         soup = BeautifulSoup(comment_html, 'html.parser')
         await self.remove_quotes(soup)
