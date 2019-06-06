@@ -9,10 +9,10 @@ class TextModel:
         self.model = None
         self.busy = False
 
-    async def createModel(self, authorid, name):
+    async def create_discord_model(self, authorid, name):
         if self.busy:
             raise Busy
-        self.busy=True
+        self.busy = True
         if self.authorid == authorid:
             self.busy = False
             raise ModelAlreadyExists
@@ -20,15 +20,32 @@ class TextModel:
         self.authorid = authorid
         wordlist = ""
         for (coll, serverid) in self.bot._cfg.items('scrapeservers'):
-            query = self.bot._db[coll].find({"author_id" : authorid}, {"_id":0, "content":1})
+            query = self.bot._db[coll].find({"author_id" : authorid}, {"_id": 0, "content": 1})
             async for doc in query:
                 wordlist += doc['content'] + '\n'
         self.model = markovify.NewlineText(wordlist)
         print("Done creating model")
-        self.busy=False
+        self.busy = False
 
+    async def create_forum_model(self, authorid, name):
+        if self.busy:
+            raise Busy
+        self.busy = True
+        if self.authorid == authorid:
+            self.busy = False
+            raise ModelAlreadyExists
+        self.name = name
+        self.authorid = authorid
+        wordlist = ""
+        for forum in self.bot._cfg.get("scrapeforums", "forums").split(','):
+            query = self.bot._db[forum].find({"user_id" : authorid}, {"_id": 0, "content": 1})
+            async for doc in query:
+                wordlist += doc['content'] + '\n'
+        self.model = markovify.NewlineText(wordlist)
+        print(f"Done creating model {name}")
+        self.busy = False
 
-    async def makeSentence(self, beginning = None):
+    async def make_sentence(self, beginning = None):
         if not self.model:
             raise ModelDoesntExist
         if not beginning:

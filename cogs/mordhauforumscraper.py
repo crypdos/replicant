@@ -10,6 +10,21 @@ class MordhauForumScraper(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.scraping = False
+
+    async def cog_check(self, ctx):
+        # check whether ctx server is in list of "botservers" in config
+        if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():
+            return False
+        if await self.bot._db['admins'].find_one({"id": ctx.author.id}):
+            # check if author is admin
+            return True
+        if ctx.author.permissions_in(ctx.channel).administrator and str(ctx.guild.id) in dict(
+                self.bot._cfg.items('serveradmins')).values():
+            # check whether servers admins are allowed and whether author is an admin
+            return True
+        await ctx.send('no')
+        return False
 
     async def remove_quotes(self, soup):
         "Remove quotes"
@@ -55,7 +70,7 @@ class MordhauForumScraper(commands.Cog):
         "In a forumpage, find the comment matching the comment_id and add it to the db"
         soup = await self.soup_from_page(comment_id)
         if soup is None:
-            return
+            return 404
         comment = soup.find(class_="comment", attrs={"data-pk": str(comment_id)})
         await self.comment_to_db(comment, comment_id)
 
@@ -72,20 +87,58 @@ class MordhauForumScraper(commands.Cog):
         await self.remove_polls(soup)
         return soup
 
-    @commands.command(name="mordhauscrape")
-    async def scrape(self, ctx, start: int):
-        # "Look for comment_id with highest value in the db, start scraping from that point on"
-        # async for x in self.bot._db['mordhauforum'].find().sort("comment_id", DESCENDING).limit(1):
-        #     start = int(x['comment_id'])
+    async def update_message_counts(self):
+        "Store message count in a seperate DB collection"
+        newdict = {}
+        for forum in self.bot._cfg.get("scrapeforums", "forums", fallback=["mordhauforum"]).split(','):
+            agg = self.bot._db[forum].aggregate([{"$group": {"_id": "$user_id", "count": {"$sum": 1}}}])
+            async for x in agg:
+                if x['_id'] in newdict:
+                    newdict[x['_id']] += x['count']
+                else:
+                    newdict[x['_id']] = x['count']
+        for user_id, messagecount in newdict.items():
+            if await self.bot._db['statistics'].find_one({"user_id": user_id}):
+                await self.bot._db['statistics'].update_one({"user_id": user_id}, {
+                    "$set": {"messagecount": messagecount, "discord": False}})
+            else:
+                await self.bot._db['statistics'].insert_one(
+                    {"user_id": user_id, "messagecount": messagecount, "discord": False})
 
-        """Process comments one by one, ignoring the rest of the forumpage that the comment is on"""
-        print(f"Starting mordhauforum scrape, start={start}")
-        end = 197677
-        for i in range(start, end):
-            await self.process_single_comment(i)
-            if i% 50 == 0:
-                print(f"i = {i}")
-        print("Done looping")
+    @commands.command(name="mordhauscrape")
+    async def scrape(self, ctx):
+        """Look for comment_id with highest value in the db, start scraping from that point on.
+        Process comments one by one, ignoring the rest of the forumpage that the comment is on """
+        if self.scraping:
+            await ctx.send("already scraping forums")
+            return
+        self.scraping = True
+        try:
+            async for x in self.bot._db['mordhauforum'].find().sort("comment_id", DESCENDING).limit(1):
+                start = int(x['comment_id'])
+            print(f"Starting mordhauforum scrape, start={start}")
+            error_buffer = 0
+            error_max = 100
+            i = start
+            while (error_buffer < error_max):
+                response = await self.process_single_comment(i)
+                if response == 404:
+                    error_buffer += 1
+                else:
+                    error_buffer = 0
+                if i% 50 == 0:
+                    print(f"i = {i}")
+                i += 1
+            print("Done looping")
+            await self.update_message_counts()
+            print("Done updating message counts")
+            await ctx.send("done scraping forums")
+            self.scraping = False
+        except:
+            self.scraping = False
+            print("something went wrong during forum scrape")
+
+
 
 
 def setup(bot):

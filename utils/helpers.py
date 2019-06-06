@@ -16,11 +16,21 @@ async def clean_content(ctx, message):
     message = message.replace("@here", "\@here")
     return message
 
+
+async def forum_id_from_name(ctx, target_name):
+    doc = await ctx.bot._db['mordhauforum'].find_one({"author_name": target_name}, {"_id": 0, "user_id": 1})
+    if doc is None:
+        ctx.send(f"can't find user {target_name}")
+        return
+    return doc['user_id']
+
+
 async def count_documents(ctx, userid):
     total=0
     for (coll, serverid) in ctx.bot._cfg.items('scrapeservers'):
         total += await ctx.bot._db[coll].count_documents({"author_id": userid})
     return total
+
 
 async def username_from_db(ctx, userid):
     user = await ctx.bot.fetch_user(userid)
@@ -32,12 +42,14 @@ async def username_from_db(ctx, userid):
             return doc['author_name']
     return None
 
+
 async def userid_in_db(ctx, userid):
     for (coll, serverid) in ctx.bot._cfg.items('scrapeservers'):
         doc = await ctx.bot._db[coll].find_one({"author_id" : userid})
         if doc:
             return doc['author_id']
     return None
+
 
 async def accept_invite(ctx, invitestring):
     invite = re.search(r'discord.gg\/(\S*)', invitestring).group(1)

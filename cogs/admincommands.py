@@ -3,9 +3,10 @@ from discord.ext import commands
 from datetime import datetime
 from utils.customerrors import NotEnoughMessages, AlreadyScraping
 import utils.customconverters as customconverters
-from utils.helpers import username_from_db, count_documents
+from utils.helpers import username_from_db, count_documents, forum_id_from_name
 import utils.checks as checks
 import aiohttp
+from bs4 import BeautifulSoup
 
 class AdminCommands(commands.Cog):
 
@@ -14,7 +15,7 @@ class AdminCommands(commands.Cog):
         self.password = self.bot._cfg['discord']['password']
         assert isinstance(bot, commands.Bot)
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         # check whether ctx server is in list of "botservers" in config
         if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():
             return False
@@ -62,7 +63,7 @@ class AdminCommands(commands.Cog):
             raise NotEnoughMessages(target.name, usermsgcount, cutoff)
         else:
             await ctx.send(f"replicating {target.name} ({usermsgcount} messages)")
-        await self.bot._model.createModel(target.id, target.name)
+        await self.bot._model.create_discord_model(target.id, target.name)
         await ctx.send(f"hi it's me {target.name} 😃 ")
 
     @commands.command(name="scrape")
@@ -100,6 +101,56 @@ class AdminCommands(commands.Cog):
             # ideally reaching this point should've been prevented by the avatarcd check
             self.bot._avatarcd._cooldown._tokens += 1
             await ctx.send("couldn't change avatar because of discord API ratelimit")
+
+    @checks.avatarcd()
+    @commands.command(name='forumavatar')
+    async def copy_forum_avatar(self, ctx, f_user: customconverters.ForumUser):
+        base_url = str("http://www.mordhau.com/forum/user/")
+        url = base_url + str(f_user.id)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    return None
+                comment_html = await response.text()
+        soup = BeautifulSoup(comment_html, 'html.parser')
+        avatar_url = soup.find(class_="profile-avatar").get('src')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(avatar_url) as response:
+                assert response.status == 200
+                avatarimage = await response.read()
+        try:
+            await self.bot.user.edit(password=self.password, avatar=avatarimage)
+        except discord.HTTPException:
+            # ratelimited by discord API, removing the last token because this function didn't complete successfully
+            # ideally reaching this point should've been prevented by the avatarcd check
+            self.bot._avatarcd._cooldown._tokens += 1
+            await ctx.send("couldn't change avatar because of discord API ratelimit")
+
+    @commands.command(name="forummodel")
+    async def forum_create_model(self, ctx, f_user: customconverters.ForumUser):
+        cutoff = self.bot._cfg.getint("settings", "forumcutoff", fallback=50)
+        if f_user.messages < cutoff:
+            raise NotEnoughMessages(f_user.name, f_user.messages, cutoff)
+        else:
+            await ctx.send(f"replicating {f_user.name} ({f_user.messages} posts)")
+        await self.bot._model.create_forum_model(f_user.id, f_user.name)
+        await ctx.send(f"hi it's me {f_user.name} 😃 ")
+
+    @commands.command(name="forumcopy", aliases = ["forumreplicate"])
+    async def forum_replicate(self, ctx, f_user: customconverters.ForumUser):
+        cutoff = self.bot._cfg.getint("settings", "forumcutoff", fallback=50)
+        if f_user.messages < cutoff:
+            raise NotEnoughMessages(f_user.name, f_user.messages, cutoff)
+        try:
+            await ctx.invoke(self.bot.get_command('forummodel'), f_user)
+            await ctx.invoke(self.bot.get_command('forumavatar'), f_user)
+            await ctx.invoke(self.bot.get_command('setnickname'), f_user.name)
+        except:
+            # fix this later
+            await ctx.send("smth went wrong <@211924020742979584>")
+
+
+
 
 def setup(bot):
     bot.add_cog(AdminCommands(bot))

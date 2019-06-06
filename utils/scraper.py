@@ -9,6 +9,7 @@ class Scraper:
         self.scraping = False
 
     async def start_scrape(self):
+        """Scrape all channels in the 'scrapeservers' collection in the config."""
         if self.scraping:
             raise AlreadyScraping
         self.scraping = True
@@ -34,6 +35,7 @@ class Scraper:
 
 
     async def scrape_channel(self, channel, coll):
+        """Scrape all messages from a channel"""
         print(f"Scraping logs from channel {channel.name}")
 
         lastscrapedoc = await self.bot._db['scrapetime'].find_one({'channel_id': channel.id}, {'_id':0, 'lastscrape':1})
@@ -79,6 +81,7 @@ class Scraper:
         return total
 
     async def update_statistics(self):
+        "Store message count in a seperate DB collection"
         newdict = {}
         for (coll, serverid) in self.bot._cfg.items('scrapeservers'):
             agg = self.bot._db[coll].aggregate([{"$group": {"_id": "$author_id", "count": {"$sum": 1}}}])
@@ -88,8 +91,8 @@ class Scraper:
                 else:
                     newdict[x['_id']] = x['count']
         for authorid, messagecount in newdict.items():
-            if await self.bot._db['statistics'].find_one({"author_id" : authorid}):
-                await self.bot._db['statistics'].update_one({"author_id" : authorid}, {"$set": {"messagecount": messagecount}})
+            if await self.bot._db['statistics'].find_one({"author_id" : authorid, "discord": True}):
+                await self.bot._db['statistics'].update_one({"author_id" : authorid}, {"$set": {"messagecount": messagecount, "discord" : True}})
             else:
-                await self.bot._db['statistics'].insert_one({"author_id" : authorid, "messagecount": messagecount})
+                await self.bot._db['statistics'].insert_one({"author_id" : authorid, "messagecount": messagecount, "discord": True})
 

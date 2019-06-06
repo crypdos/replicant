@@ -9,7 +9,7 @@ class UserCommands(commands.Cog, name='User Commands'):
         self.bot = bot
         self.password = self.bot._cfg['discord']['password']
 
-    async def __local_check(self,ctx):
+    async def cog_check(self,ctx):
         if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():
             return False
         return True
@@ -53,18 +53,23 @@ class UserCommands(commands.Cog, name='User Commands'):
 
     @commands.command(name="s")
     async def say(self, ctx, beginning : str = None):
-        if self.bot._cfg.get('settings', 'deletesay', fallback = "no").lower() == "yes":
+        if self.bot._cfg.get('settings', 'deletesay', fallback = "no").lower() == "yes" and "@" not in ctx.message.content:
             try:
                 await ctx.message.delete()
             except Forbidden:
                 print("No permission to delete message")
-        sentence = await self.bot._model.makeSentence(beginning)
+        sentence = await self.bot._model.make_sentence(beginning)
         if sentence:
             if "@" in sentence:
                 cleansentence = await clean_content(ctx, sentence)
             else:
                 cleansentence = sentence
             await ctx.send(cleansentence)
+
+    @commands.command()
+    async def test(self, ctx, target: customconverters.GlobalUser):
+        print("test")
+
 
 def setup(bot):
     bot.add_cog(UserCommands(bot))

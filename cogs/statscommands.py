@@ -10,7 +10,7 @@ class StatsCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():
             return False
         return True
@@ -35,7 +35,7 @@ class StatsCommands(commands.Cog):
         if target is None:
             target=ctx.author
         async with ctx.channel.typing():
-            ## slasher is hardcoded for now, change later
+            # slasher is hardcoded for now, change later
             rollingwindow = 5 # rolling mean of width 5
             cursor = ctx.bot._db['slasher'].find({"author_id": target.id}, {"_id": 0, 'timestamp': 1})
             series = pd.Series(index = [i['timestamp'] async for i in cursor], data=1)
@@ -60,6 +60,23 @@ class StatsCommands(commands.Cog):
                               {"$group": {"_id": "$author_name", "userid": {"$addToSet": "$author_id"},
                                           "count": {"$sum": 1}}},
                               {"$sort": {"count": -1}}])
+        output = f"Results for \"{tofind}\":\n"
+        i, maxiter = 0, 5
+        async for x in query:
+            output += f"\"{x['_id']}\", userid: {x['userid']}, msgcount: {x['count']}\n"
+            i += 1
+            if i >= maxiter:
+                break
+        await ctx.send(output)
+
+    @commands.command(name="forumfind", aliases=["forumsearch"])
+    async def find_forum_user(self, ctx, tofind: str):
+        server = "mordhauforum"  # hardcoded to slasher for now, change later
+        query = self.bot._db[server].aggregate([{"$match": {'author_name': {'$regex': tofind, '$options': 'i'}}},
+                                                {"$group": {"_id": "$author_name",
+                                                            "userid": {"$addToSet": "$user_id"},
+                                                            "count": {"$sum": 1}}},
+                                                {"$sort": {"count": -1}}])
         output = f"Results for \"{tofind}\":\n"
         i, maxiter = 0, 5
         async for x in query:

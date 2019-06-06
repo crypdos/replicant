@@ -70,3 +70,33 @@ class GlobalUser(commands.IDConverter):
             raise commands.BadArgument('User "{}" not found'.format(argument))
 
         return result
+
+
+class ForumUser(commands.Converter):
+    def __init__(self):
+        self.name = None
+        self.id = None
+        self.messages = 0
+
+    async def convert(self, ctx, argument):
+        if argument.isdigit():
+            doc = await ctx.bot._db['mordhauforum'].find_one({"user_id": int(argument)}, {"_id": 0, "author_name": 1})
+            if doc is not None: # argument was a userid, found it successfully
+                self.name = doc['author_name']
+                self.id = argument
+                doc = await ctx.bot._db['statistics'].find_one({'user_id': int(argument), "discord": False},
+                                                                {"_id": 0, "messagecount": 1})
+                if doc:
+                    self.messages = doc['messagecount']
+                return self
+        doc = await ctx.bot._db['mordhauforum'].find_one({'author_name': {'$regex': argument, '$options': 'i'}})
+        if doc is not None: # argument was a username, found it successfully via regex
+            self.name = doc['author_name']
+            self.id = doc['user_id']
+            doc = await ctx.bot._db['statistics'].find_one({'user_id': self.id, "discord": False},
+                                                            {"_id": 0, "messagecount": 1})
+            if doc:
+                self.messages = doc['messagecount']
+            return self
+        else:
+            raise commands.BadArgument('User(id) "{}" not found'.format(argument))

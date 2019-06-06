@@ -9,7 +9,7 @@ class OwnerCommands(commands.Cog):
         self.bot = bot
         self.password = self.bot._cfg.get('discord', 'password', fallback="")
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         if ctx.author.id == self.bot.owner_id:
             return True
         elif not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():

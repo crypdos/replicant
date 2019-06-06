@@ -12,7 +12,7 @@ class VoteCommand(commands.Cog):
     def __init__(self, bot):
         self.bot=bot
 
-    async def __local_check(self, ctx):
+    async def cog_check(self, ctx):
         if not ctx.guild or str(ctx.guild.id) not in dict(self.bot._cfg.items('botservers')).values():
             #silently fail
             return False
@@ -58,7 +58,6 @@ class VoteCommand(commands.Cog):
         else:
             # winner is 0 which is "keep current model", add 1 token to avatarcd bucket
             self.bot._avatarcd._cooldown._tokens += 1
-
 
     async def make_candidate_list(self, ctx, target):
         candidates = []

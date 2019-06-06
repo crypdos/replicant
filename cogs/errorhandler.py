@@ -8,6 +8,7 @@ from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
 class ErrorHandler(commands.Cog, name="Error Handler"):
     def __init__(self, bot):
         self.bot = bot
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
