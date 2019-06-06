@@ -139,7 +139,5 @@ class MordhauForumScraper(commands.Cog):
             print("something went wrong during forum scrape")
 
 
-
-
 def setup(bot):
     bot.add_cog(MordhauForumScraper(bot))

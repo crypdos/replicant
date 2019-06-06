@@ -141,15 +141,9 @@ class AdminCommands(commands.Cog):
         cutoff = self.bot._cfg.getint("settings", "forumcutoff", fallback=50)
         if f_user.messages < cutoff:
             raise NotEnoughMessages(f_user.name, f_user.messages, cutoff)
-        try:
-            await ctx.invoke(self.bot.get_command('forummodel'), f_user)
-            await ctx.invoke(self.bot.get_command('forumavatar'), f_user)
-            await ctx.invoke(self.bot.get_command('setnickname'), f_user.name)
-        except:
-            # fix this later
-            await ctx.send("smth went wrong <@211924020742979584>")
-
-
+        await ctx.invoke(self.bot.get_command('forumavatar'), f_user)
+        await ctx.invoke(self.bot.get_command('setnickname'), f_user.name)
+        await ctx.invoke(self.bot.get_command('forummodel'), f_user)
 
 
 def setup(bot):

@@ -38,7 +38,7 @@ class TextModel:
         self.authorid = authorid
         wordlist = ""
         for forum in self.bot._cfg.get("scrapeforums", "forums").split(','):
-            query = self.bot._db[forum].find({"user_id" : authorid}, {"_id": 0, "content": 1})
+            query = self.bot._db[forum].find({"user_id" : int(authorid)}, {"_id": 0, "content": 1})
             async for doc in query:
                 wordlist += doc['content'] + '\n'
         self.model = markovify.NewlineText(wordlist)

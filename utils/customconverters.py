@@ -83,7 +83,7 @@ class ForumUser(commands.Converter):
             doc = await ctx.bot._db['mordhauforum'].find_one({"user_id": int(argument)}, {"_id": 0, "author_name": 1})
             if doc is not None: # argument was a userid, found it successfully
                 self.name = doc['author_name']
-                self.id = argument
+                self.id = int(argument)
                 doc = await ctx.bot._db['statistics'].find_one({'user_id': int(argument), "discord": False},
                                                                 {"_id": 0, "messagecount": 1})
                 if doc:
