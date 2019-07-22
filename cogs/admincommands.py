@@ -158,7 +158,8 @@ class AdminCommands(commands.Cog):
             else: # no entry = no messages
                 messagecount = 0
             if messagecount <= cutoff:
-                lurkerlist += str(member.id)+ " " + member.name + "#" +  str(member.discriminator) + " " + str(messagecount) + "\n"
+                lurkerlist += str(member.id)+ " " + member.name + "#" +  str(member.discriminator) + " " \
+                              + member.joined_at.strftime("%m/%d/%Y") + " " + str(messagecount) + "\n"
                 lurkercount += 1
         lurkerfile = io.StringIO(lurkerlist)
         await ctx.send(f"found {lurkercount} lurkers", file=discord.File(lurkerfile, filename="lurkerlist.txt"))
