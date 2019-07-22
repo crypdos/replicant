@@ -7,6 +7,7 @@ from utils.helpers import username_from_db, count_documents, forum_id_from_name
 import utils.checks as checks
 import aiohttp
 from bs4 import BeautifulSoup
+import io
 
 class AdminCommands(commands.Cog):
 
@@ -144,6 +145,23 @@ class AdminCommands(commands.Cog):
         await ctx.invoke(self.bot.get_command('forumavatar'), f_user)
         await ctx.invoke(self.bot.get_command('setnickname'), f_user.name)
         await ctx.invoke(self.bot.get_command('forummodel'), f_user)
+
+    @commands.command(name="findlurkers")
+    async def find_lurkers(self, ctx, cutoff : int = 10):
+        lurkerlist = ""
+        await ctx.send(f"looking for lurkers with <= {cutoff} messages in total")
+        lurkercount = 0
+        for member in ctx.guild.members:
+            messagecount = await self.bot._db['statistics'].find_one({"author_id": member.id})
+            if messagecount: # there's an entry
+                messagecount = messagecount['messagecount']
+            else: # no entry = no messages
+                messagecount = 0
+            if messagecount <= cutoff:
+                lurkerlist += str(member.id)+ " " + member.name + "#" +  str(member.discriminator) + " " + str(messagecount) + "\n"
+                lurkercount += 1
+        lurkerfile = io.StringIO(lurkerlist)
+        await ctx.send(f"found {lurkercount} lurkers", file=discord.File(lurkerfile, filename="lurkerlist.txt"))
 
 
 def setup(bot):
