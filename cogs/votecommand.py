@@ -62,7 +62,7 @@ class VoteCommand(commands.Cog):
     async def make_candidate_list(self, ctx, target):
         candidates = []
         cutoff = self.bot._cfg.getint("settings", "msgcutoff", fallback=1000)
-        userpopcursor = self.bot._db['statistics'].find({"messagecount": {"$gt": cutoff}})
+        userpopcursor = self.bot._db['statistics'].find({"messagecount": {"$gt": cutoff}, "discord": True})
         userpop = []
         async for user in userpopcursor:
             userpop.append(user)
