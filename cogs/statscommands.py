@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import utils.customconverters as customconverters
 import io
 import discord
+from wordcloud import WordCloud, STOPWORDS
 
 class StatsCommands(commands.Cog):
 
@@ -85,6 +86,24 @@ class StatsCommands(commands.Cog):
             if i >= maxiter:
                 break
         await ctx.send(output)
+
+    @commands.command(name="wordcloud")
+    async def make_wordcloud(self, ctx, target: customconverters.GlobalUser = None):
+        if target is None:
+            target = ctx.author
+        wordlist = ""
+        stopwords = set(STOPWORDS)
+        for (coll, serverid) in self.bot._cfg.items('scrapeservers'):
+            query = self.bot._db[coll].find({"author_id": target.id}, {"_id": 0, "content": 1})
+            async for doc in query:
+                wordlist += doc['content'] + '\n'
+        wordcloud = WordCloud(max_font_size=50, max_words=100, background_color="#36393E",
+                              stopwords=stopwords, collocations=False).generate(wordlist)
+        buf = io.BytesIO()
+        img = wordcloud.to_image()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        await ctx.send(file=discord.File(buf, filename=target.name + "_wordcloud.png"))
 
 
 def setup(bot):
