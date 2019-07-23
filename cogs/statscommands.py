@@ -5,6 +5,7 @@ import utils.customconverters as customconverters
 import io
 import discord
 from wordcloud import WordCloud, STOPWORDS
+import re
 
 class StatsCommands(commands.Cog):
 
@@ -90,6 +91,7 @@ class StatsCommands(commands.Cog):
     @commands.command(name="wordcloud")
     async def make_wordcloud(self, ctx, target: customconverters.GlobalUser = None):
         async with ctx.channel.typing():
+            url_pat = r'(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/\S*)?'
             if target is None:
                 target = ctx.author
             wordlist = ""
@@ -98,8 +100,10 @@ class StatsCommands(commands.Cog):
                 query = self.bot._db[coll].find({"author_id": target.id}, {"_id": 0, "content": 1})
                 async for doc in query:
                     wordlist += doc['content'] + '\n'
-            wordcloud = WordCloud(max_font_size=50, max_words=100, background_color="#36393E",
-                                  stopwords=stopwords, collocations=False).generate(wordlist)
+
+            wordlist = re.sub(url_pat, ' ', wordlist)
+            wordcloud = WordCloud(height=600, width=1200, max_words=100, background_color="#36393E",
+                                  stopwords=stopwords, collocations=False, colormap="Pastel2").generate(wordlist)
             buf = io.BytesIO()
             img = wordcloud.to_image()
             img.save(buf, format="PNG")
