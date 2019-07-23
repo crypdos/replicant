@@ -104,7 +104,7 @@ class StatsCommands(commands.Cog):
             img = wordcloud.to_image()
             img.save(buf, format="PNG")
             buf.seek(0)
-            await ctx.send(file=discord.File(buf, filename=target.name + "_wordcloud.png"))
+            await ctx.send(f"{target.name}'s wordcloud:", file=discord.File(buf, filename=target.name + "_wordcloud.png"))
 
 
 def setup(bot):
